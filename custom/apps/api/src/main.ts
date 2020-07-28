@@ -4,17 +4,24 @@
  */
 
 import { NestFactory } from '@nestjs/core';
-
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const globalPrefix = 'api';
-  app.setGlobalPrefix(globalPrefix);
-  const port = process.env.port || 4000;
-  await app.listen(port, () => {
-    console.log('Listening at http://localhost:' + port + '/' + globalPrefix);
+  const app = await NestFactory.create(AppModule, {
+    logger: true
   });
+  const globalPrefix = 'rada-api';
+  const port = process.env.PORT || 3333;
+
+  app.setGlobalPrefix(globalPrefix);
+
+  await app.listen(
+    port,
+    () => {
+      console.log('Listening at http://localhost:' + port + '/' + globalPrefix);
+    }
+  );
+
 }
 
 bootstrap();
