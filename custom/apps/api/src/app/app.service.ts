@@ -1,20 +1,103 @@
 import { Injectable } from '@nestjs/common';
-import { Message } from '@custom/api-interfaces';
+import { XmlformParser } from './xmlform-parser';
 
 const UssdMenu = require('ussd-menu-builder');
-const menu = new UssdMenu();
+let menu = new UssdMenu();
 
 @Injectable()
 export class AppService {
-  constructor() {
-    this.generateForms();
+
+  constructor(private readonly xmlformParser: XmlformParser) {
+    // this.generateForms();
+    this.run();
+  }
+
+  onModuleInit() {
   }
 
   getMenu(): any {
     return menu;
   }
 
+  async run() {
+    try {
+      const ast = await this.xmlformParser.queryForm().toPromise();
+
+      this.xmlformParser.converToUSSDStates(ast);
+
+      this.xmlformParser.questions.sort(
+        (a,b) => {
+          if (a.isFirst) return 1;
+          if (b.isFirst) return 1;
+          let _a: any = a.refCode.split('/').filter(v => !!v)[1];
+          let _b: any = b.refCode.split('/').filter(v => !!v)[1];
+
+          try {
+            _b = parseInt(_b.split('_')[1], 10);
+            _a = parseInt(_b.split('_')[1], 10);
+            if (_a < _b) return 1;
+            if (_b < _a) return -1;
+          } catch (e) { }
+
+          return 0;
+        }
+      )
+
+      const que = this.xmlformParser.questions.filter(v => v.isFirst)[0];
+      menu = menu.startState({
+          run: function () {
+            menu.con(que.chooses);
+          },
+          next: que.nextOptions,
+          defaultNext: 'invalidOption'
+        });
+
+      for (const question of this.xmlformParser.questions) {
+        if (question.nextOptions === undefined) {
+          menu = menu.state(question.refCode, {
+            run: function () {
+              menu.con(question.chooses);
+            },
+            next: {
+              '*': 'completed',
+            },
+            defaultNext: 'invalidOption',
+          });
+          continue;
+        }
+
+        menu = menu.state(question.refCode, {
+          run: function () {
+            menu.con(question.chooses);
+          },
+          next: question.nextOptions,
+          defaultNext: 'invalidOption',
+        });
+      }
+
+    } catch (e) {
+      console.log(e);
+    }
+
+    menu.state('completed', {
+      run: function () {
+        menu.end("Thank you. Relevant authorities will act on it");
+      },
+    })
+    .state('invalidOption', {
+      run: function () {
+        menu.end("Sorry, Invalid option. Try again later");
+      }
+    });
+
+  }
+
   async runUSSD(args) {
+    let resp = await menu.run(args);
+    return resp;
+  }
+
+  async runUSSDV2(args) {
     let resp = await menu.run(args);
     return resp;
   }

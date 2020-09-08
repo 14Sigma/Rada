@@ -55,7 +55,7 @@ module.exports = {
   created: new Date(2017, 3, 30),
   run: () => {
     return Promise.resolve()
-      .then(() => addRole('_users', 'national_admin'))
+      // .then(() => addRole('_users', 'national_admin'))
       .then(() => addRole(environment.db, 'national_admin'));
   }
 };
