@@ -56,6 +56,9 @@ npm install -g medic-conf
 sudo python -m pip install git+https://github.com/medic/pyxform.git@medic-conf-1.17#egg=pyxform-medic
 eval "$(medic-conf --shell-completion=bash)"
 
+# Install NX
+sudo npm i -g @nrwl/nx @nrwl/nest nx @nrwl/schematics
+
 # Build the web app
 cd ~/
 git clone https://github.com/klurdy/rada

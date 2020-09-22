@@ -10,7 +10,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: true
   });
-  const globalPrefix = 'rada-api';
+  const globalPrefix = 'v1';
   const port = process.env.PORT || 3333;
 
   app.setGlobalPrefix(globalPrefix);
